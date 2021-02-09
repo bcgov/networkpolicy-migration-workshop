@@ -1,0 +1,40 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: mobile-signing-service
+metadata:
+  name: mobile-signing-service
+objects:
+  - apiVersion: security.devops.gov.bc.ca/v1alpha1
+    kind: NetworkSecurityPolicy
+    metadata:
+      name: any-to-any
+      labels:
+        app: mobile-signing-service
+    spec:
+      description: |
+        allow all pods to communicate
+      source:
+        - - "$namespace=${NAMESPACE}"
+      destination:
+        - - "$namespace=${NAMESPACE}"
+  - apiVersion: security.devops.gov.bc.ca/v1alpha1
+    kind: NetworkSecurityPolicy
+    metadata:
+      name: any-to-external
+      labels:
+        app: mobile-signing-service
+    spec:
+      description: |
+        Allow all pods to talk to external systems
+      source:
+        - - "$namespace=${NAMESPACE}"
+      destination:
+        - - "ext:network=any"
+parameters:
+  - name: NAMESPACE
+    displayName: Namespace
+    description: |
+      The k8s namespace this NSP is being deployed to
+    required: true

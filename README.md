@@ -140,7 +140,8 @@ These examples use the label convention `component: api` but alternative like `r
 ```
 
 **Pro Tip 🤓**
-- The `port` is whatever port the pod exposes and has nothing to do with the service or route.
+- The `port` is whatever port the pod exposes.
+
 
 ## Testing
 

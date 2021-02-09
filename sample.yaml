@@ -5,6 +5,17 @@ labels:
 metadata:
   name: some-cool-app
 objects:
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: deny-by-default
+      labels:
+        app: some-cool-app
+    spec:
+      # This project's default posture is "security first". All 
+      # traffic is denied by default.
+      podSelector: {}
+      ingress: []
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
     metadata:
@@ -12,6 +23,9 @@ objects:
       labels:
         app: some-cool-app
     spec:
+      # Any pod with an external route & service combination is
+      # allowed to accept traffic; if we don't want external access
+      # we do not assign a route.
       ingress:
         - from:
             - namespaceSelector:
@@ -27,6 +41,8 @@ objects:
       labels:
         app: some-cool-app
     spec:
+      # Allow the API pod to communicate to any pod in the Patroni
+      # cluster on the given port.
       podSelector:
         matchLabels:
           cluster-name: patroni
@@ -45,6 +61,8 @@ objects:
       labels:
         app: some-cool-app
     spec:
+      # Allow the API pod to talk to any pod to communicate with
+      # any minio pod on the given port.
       podSelector:
         matchLabels:
           component: minio

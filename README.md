@@ -37,6 +37,18 @@ oc process -f quickstart-nsp.yaml -p NAMESPACE=$(oc project --short) | \
 oc apply -f -
 ```
 
+```console
+oc process -f quickstart-nsp.yaml NAMESPACE_PREFIX=${$(oc project --short)%%"-"*} -p ENVIRONMENT=${$(oc project --short)##*"-"} | oc apply -f -
+```
+
+```console
+➜  nsp-to-knp-migration git:(main) ✗ oc process -f quickstart-nsp.yaml NAMESPACE_PREFIX=${$(oc project --short)%%"-"*} -p ENVIRONMENT=${$(oc project --short)##*"-"} | oc apply -f -
+networkpolicy.networking.k8s.io/deny-by-default configured
+networkpolicy.networking.k8s.io/allow-all-internal unchanged
+networksecuritypolicy.security.devops.gov.bc.ca/any-to-any unchanged
+networksecuritypolicy.security.devops.gov.bc.ca/any-to-external unchanged
+```
+
 You'll find two new NSPs have been created:
 
 ```console

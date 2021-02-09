@@ -12,9 +12,12 @@ The current version of the OpenShift (v4.5) on the platform does not support all
 
  This went reasonably well on OCP4, however, significate issues have forced us to pivot to KNP. Some might say this was a failure, but in reality, learning new information and acting on it is a success. Learning new information and doing nothing would certainly be a failure.
 
+**Takeaway 🧐**
+- Aporeto and Kubernetes NetworkPolicy (KNP) are have a fairley comparable impact from the end-users perspective. The main differences is that Aporeto could be extended to external systems where as KNP ony applies to OCP.
+
 # TL;DR
 
-You're going to migrate from NSP to KNP by adding NSP to your namespace(s) to open up network communication so all pods can talk to all other pods within a given namespace. Then, you'll create new KNP to ratchet down communications to a more sane level.
+You're going to migrate from NSP to KNP by adding NSP to your namespace(s) to open up network communication so all pods can talk to all other pods within a given namespace. Then, you'll create new KNP to ratchet down communications to a more sane level. Here are some additional documents that thoroughly explain OCP's SDN, OCP's implementation of KNP, and KNP.
 
 * [OpenShift SDN](https://docs.openshift.com/container-platform/4.5/networking/openshift_sdn/about-openshift-sdn.html)
 

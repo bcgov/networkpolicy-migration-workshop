@@ -136,11 +136,11 @@ Lets go through the differences in anatomy of a NSP and KNP to see how they tran
 
 3) The **green** box illustrates the source component; this is where the communication originates. The NSP on the left uses label selectors to identify pods, this is the same with KNP. The only difference being KNP uses the `podSelector` notation.
 
-In Aporeto NSP you would have added a `$namespace` label to specify where the pod was expected to live. In KNP the *deny-by-default* policy walls off your namespace; all policy builds on top of this and it is assumed pods live in the same namespace. If you are doing cross-namespace communication you'll need to add a `namespaceSelector` to the `from` section of the YAML.
+    In Aporeto NSP you would have added a `$namespace` label to specify where the pod was expected to live. In KNP the *deny-by-default* policy walls off your namespace; all policy builds on top of this and it is assumed pods live in the same namespace. If you are doing cross-namespace communication you'll need to add a `namespaceSelector` to the `from` section of the YAML.
 
-**Pro Tip 🤓**
-- Policies are additive, meaning they build on one another like a logical `AND`;
-- Use `oc describe namespace/abc123-dev` to see what labels you can use to uniquely identify a namespace. You cannot use fields like `name: abc123-dev`; only labels work.
+    **Pro Tip 🤓**
+    - Policies are additive, meaning they build on one another like a logical `AND`;
+    - Use `oc describe namespace/abc123-dev` to see what labels you can use to uniquely identify a namespace. You cannot use fields like `name: abc123-dev`; only labels work.
 
 3) Finally, the **purple** box illustrates the destination component; this is where the communication ends. Again, it uses a `podSelector` to match labels on the destination pod and assumes pods are in the same namespace thanks to the *deny-by-default* policy. There is no need to add a `namespaceSelector` selector here as the policy is in the same namespace as the pod.
 

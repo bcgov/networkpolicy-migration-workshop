@@ -118,7 +118,33 @@ oc process -f quickstart.yaml \
 
 ## Migrating Custom Network Policy
 
-Writing custom network policy to control traffic flow between pods is by far the better approach to securing your namespaces. The the guides linked in the TL;DR section of this document detail how to write policy. This guide will help you migrate your existing NSP to become KNP.
+Writing custom network policy to control traffic flow between pods is by far the better approach to securing a namespace. The the docs linked in the **TL;DR** section above detail how to write policy; This guide is intended to be a high level overivew to better understand and convert existing NPS.
+
+### Side by Side Comparison
+
+The left panel of the image below shows existing NSP while the right shows it converted to KNP. Lets to through the differences in more details.
+
+![Side by Side](images/side-by-side.png)
+
+Lets go through the differences in anatomy of a NSP and KNP to see how they translate:
+
+![Side by Side 2](images/side-by-side-2.png)
+
+1) The **red** box shows the "header" of the YAML. It works just like any other OCP/k8s object definition. The main differences being the `kind` and `apiVersion` have change.
+
+2) The **yellow** box illustrates the description. In NPS this was programmed into the Aporeto Web Control plane so one could better understand what the policy was meant to do. This isn't applicable in KNP, however, it's **highly recommended** one documents **why** the policy is needed; those who follow in your footsteps may not have the clear understanding of communication paths that you do.
+
+3) The **green** box illustrates the source component; this is where the communication originates. The NSP on the left uses label selectors to identify pods, this is the same with KNP. The only difference being KNP uses the `podSelector` notation.
+
+In Aporeto NSP you would have added a `$namespace` label to specify where the pod was expected to live. In KNP the *deny-by-default* policy walls off your namespace; all policy builds on top of this and it is assumed pods live in the same namespace. If you are doing cross-namespace communication you'll need to add a `namespaceSelector` to the `from` section of the YAML.
+
+**Pro Tip 🤓**
+- Policies are additive, meaning they build on one another like a logical `AND`;
+- Use `oc describe namespace/abc123-dev` to see what labels you can use to uniquely identify a namespace. You cannot use fields like `name: abc123-dev`; only labels work.
+
+3) Finally, the **purple** box illustrates the destination component; this is where the communication ends. Again, it uses a `podSelector` to match labels on the destination pod and assumes pods are in the same namespace thanks to the *deny-by-default* policy. There is no need to add a `namespaceSelector` selector here as the policy is in the same namespace as the pod.
+
+### Labeling Your Pods
 
 When you wrote NSP for your `Deployment` or `DeploymentConfig` you would have added a label to the pods so they could be identified by Aporeto. For example, you may have used labels like this in the template section of a `DeploymentConfig`:
 
@@ -144,22 +170,44 @@ An excellent alternative to `component` is to use `role` like this example:
         spec:
 ```
 
-These labels will be leveraged by your KNP to identify what pods KNP should be applied to. A typical deployment with the following components will only need three policies to be successful:
+These labels will be leveraged by your KNP to identify what pods KNP should be applied to.
 
+### Example
+
+Lets take a look at writing (converting) KNP for a simple example with the components listed below; each component below will have its own `DeploymentConfig`. For this example only four policies are needed: The first is the *deny-by-default* refereed to above. The second policy will be to allow network traffic to enter your namespace (ingress); the third policy will be to allow your API to talk to the database; and the fourth policy will be to allow the API to talk to minio.
+
+**Components**
 * web
 * api
 * minio (object storage)
 * database
 
-The first policy will be to allow network traffic to enter your namespace (ingress); the second policy will be to allow your API to talk to the database; and the third policy will be to allow the API to talk to minio.
 
 **Pro Tip 🤓**
 - Once you add a policy to a pod any traffic not specifically permitted is rejected. You can leverage this behavior to simplify your policies;
 - If you don't want a pod to accepted external network traffic (from the wild internet) then don't create a route to it. No additional policy is required.
+- `patroni` uses the label `role=master` to identify the primary replica in a `StatefulSet`, this examples uses the label `component` to identify pods to avoid confusion with this label.
 
-## Ingress
+**Walled Garden**
 
-Having a route alone isn't enough to let traffic flow into your pods, you also need a policy to specifically permit this. This will be the first policy we write. Once in place, any pod with an external route will receive traffic on said route.
+First we'll isolate your namespace creating a walled garden. Nothing will be able to talk to the pods inside and the pods inside won't be able to talk to one another:
+
+```yaml
+- kind: NetworkPolicy
+  apiVersion: networking.k8s.io/v1
+  metadata:
+    name: deny-by-default
+  spec:
+    # The default posture for a security first namespace is to
+    # deny all traffic. If not added this rule will be added
+    # by Platform Services during environment cut-over.
+    podSelector: {}
+    ingress: []
+```
+
+**Ingress**
+
+Having a route alone isn't enough to let traffic flow into your pods, you also need a policy to specifically allow this. This will be the second policy written. Once in place, any pod with an external route will receive traffic on said route.
 
 ```yaml
 - apiVersion: networking.k8s.io/v1
@@ -180,15 +228,14 @@ Having a route alone isn't enough to let traffic flow into your pods, you also n
 ```
 
 **Pro Tip 🤓**
-- Add labels to your KNP to easily find and delete them as groups.
+- Add labels to your KNP to easily find and delete them as a group.
 - `podSelector: {}` is a wildcard, if you want additional piece of mind add a label like `route-ingress: true` to pods that can accept external traffic and use it in place of the wildcard.
 
-## Internal
+**Pod to Pod**
 
-Once external communication is enabled we need two additional policies to allow traffic between our pods. The fist policy, is to allow the API to talk to the database and the second is to allow the API to talk to minio. 
+Once external communication is enabled we need two additional policies to allow traffic between pods. The fist policy is to allow the API to talk to the database and the second is to allow the API to talk to minio. 
 
 These examples use the label convention `component: api` but alternative like `role: api` are perfectly fine; patroni uses `role: master` to denote the primary replica so for this example `component` is better suited
-
 
 ```yaml
 - kind: NetworkPolicy
@@ -251,3 +298,7 @@ timeout 5 bash -c "</dev/tcp/api/8080"; echo $?
 | C    | The port number exposed by the Pod |
 | D    | The return code of the command: `0` means the pods can communicate, while `124` means the pods cannot communicate on the given protocol / port |
 | E    | The delay in seconds the command will wait before failing |
+
+## Need More Help?
+
+If you need more help after reading this please ask questions in the `#devops-how-to` or do a quick search through [these issues](https://github.com/BCDevOps/OpenShift4-Migration/issues) in or OCP4 migration Q&A repo.

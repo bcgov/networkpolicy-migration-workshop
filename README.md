@@ -12,12 +12,12 @@ Here are some additional documents that thoroughly explain OCP's SDN implementat
 
 # Prologue
 
- Back in 2019 we decided to take a strong stance on security and, by way of a security focused project, began implementing several tools to make our OpenShift Container Platform (OCP) a leader in this respect. One of these tools, Aporeto, was chosen over Kubernetes Netowrk Policy (KNP) because it offered a way to extend security policies outside of OCP into other system. This would have enabled teams to write policy for OCP as well as external system from one central location.
+ Back in 2019 we decided to take a strong stance on security and, by way of a security focused project, began implementing several tools to make our OpenShift Container Platform (OCP) a leader in this respect. One of these tools, Aporeto, was chosen as a Software Defined Network solution to control network security for Platform app. Aporeto has been selected over Openshift 4 Built-In SDN capability powered by Kubernetes Network Policy (KNP), because it offered a way to extend security policies outside of Openshift into other systems that are based on the traditional infrastructure such as databases hosted in Zone B. This would have enabled teams to secure connections between their apps running in the Openshift Platform and datasources hosted inside the Zone B network zone. 
 
- This went reasonably well on OCP4, however, significate issues have forced us to pivot to KNP. Some might say this was a failure, but in reality, learning new information and acting on it is a success. Learning new information and doing nothing would certainly be a failure.
+While Aporeto provided a great developer experience and the functionality that met our needs very well, we ran into some issues with running it on top of our specific Openshift implementation and thus, the decision to pivot to OCP 4 Built-In SDN. Some might say this was a failure, but in reality, learning new information and acting on it is a success. Learning new information and doing nothing would certainly be a failure.
 
 **Takeaway 🧐**
-- Aporeto and Kubernetes NetworkPolicy are have a fairly comparable impact from the end-users (platform tenant) perspective. The main differences is that Aporeto could be extended to external systems where as KNP ony applies to OCP.
+- Aporeto and Kubernetes NetworkPolicy provide a very similar user experience from the Platform developer perspective. The main differences is that Aporeto could be extended to external systems where as KNP ony applies to OCP. We are actively looking into the workarounds for the teams that need to secure integrations between their Openshift app and Zone B components and expect to finalize the list of options in April 2021.
 
 # Introduction
 
@@ -27,7 +27,7 @@ As you progress through the guide you will be able to leverage much of what you 
 
 The current version of the OpenShift (v4.5) on the platform does not support all features outlined in the [Kubernetes NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/) documentation. The main differences as noted in the [OpenShift SDN](https://docs.openshift.com/container-platform/4.5/networking/openshift_sdn/about-openshift-sdn.html) documentation are that egress rules and some ipBlock rules are currently not supported; we expect these features to be delivered with OpenShift 4.8 later this fall.
 
-If you need egress rules to limit what your pods can communicate with contact Platform Services (PS). We can help implement this type of policy.
+If you need egress rules to limit what your pods can communicate with contact Platform Services (PS) in #devops-aporeto Rocketchat channel. We can help implement this type of policy.
 
 # Getting Started
 

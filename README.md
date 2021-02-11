@@ -1,6 +1,8 @@
 # TL;DR
 
-You're going to migrate from Aporeto Network Security Policy (NSP) to OpenShift's implementation of Kubernetes Network Policy (KNP) by adding NSP to your namespace(s) to open up network communication so all pods can talk to all other pods within a given namespace. Then, you'll create new KNP to ratchet down communications to a more sane level. Here are some additional documents that thoroughly explain OCP's SDN, OCP's implementation of KNP, and KNP.
+You're going to migrate from Aporeto Network Security Policy (NSP) to OpenShift's implementation of Kubernetes Network Policy (KNP) by first adding NSP to your namespace(s) to open up network communication so all pods can talk to all other pods within a given namespace. Then, you'll create new KNP to ratchet down communications to a sane level.
+
+Here are some additional documents that thoroughly explain OCP's SDN implementation of KNP.
 
 * [OpenShift SDN](https://docs.openshift.com/container-platform/4.5/networking/openshift_sdn/about-openshift-sdn.html)
 
@@ -10,22 +12,22 @@ You're going to migrate from Aporeto Network Security Policy (NSP) to OpenShift'
 
 # Prologue
 
- Back in 2019 we decided to take a strong stance on security and, by way of a security focused project, began implementing several tools to make our OpenShift Container Platform (OCP) a leader in this respect. One of these tools, Aporeto, was chosen over KNP because it offered a way to extend security policies outside of OCP into other system. This would enable teams to write policy for OCP as well as external system.
+ Back in 2019 we decided to take a strong stance on security and, by way of a security focused project, began implementing several tools to make our OpenShift Container Platform (OCP) a leader in this respect. One of these tools, Aporeto, was chosen over Kubernetes Netowrk Policy (KNP) because it offered a way to extend security policies outside of OCP into other system. This would have enabled teams to write policy for OCP as well as external system from one central location.
 
  This went reasonably well on OCP4, however, significate issues have forced us to pivot to KNP. Some might say this was a failure, but in reality, learning new information and acting on it is a success. Learning new information and doing nothing would certainly be a failure.
 
 **Takeaway 🧐**
-- Aporeto and Kubernetes NetworkPolicy (KNP) are have a fairly comparable impact from the end-users perspective. The main differences is that Aporeto could be extended to external systems where as KNP ony applies to OCP.
+- Aporeto and Kubernetes NetworkPolicy are have a fairly comparable impact from the end-users (platform tenant) perspective. The main differences is that Aporeto could be extended to external systems where as KNP ony applies to OCP.
 
 # Introduction
 
-This guide will walk you through the migration from Aporeto Network Security Policy (NSP) to OpenShift / Kubernets Network Policy (KNP).
+This guide will walk you through the migration from Aporeto Network Security Policy (NSP) to OpenShift / Kubernets Network Policy.
 
 As you progress through the guide you will be able to leverage much of what you have done for NSP; for example, you can continue to use labels such as `role=web` or `component=api` that you may have created. 
 
 The current version of the OpenShift (v4.5) on the platform does not support all features outlined in the [Kubernetes NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/) documentation. The main differences as noted in the [OpenShift SDN](https://docs.openshift.com/container-platform/4.5/networking/openshift_sdn/about-openshift-sdn.html) documentation are that egress rules and some ipBlock rules are currently not supported; we expect these features to be delivered with OpenShift 4.8 later this fall.
 
-If you need egress rules to limit what your pods can communicate with contact Platform Services. We can help implement this type of policy.
+If you need egress rules to limit what your pods can communicate with contact Platform Services (PS). We can help implement this type of policy.
 
 # Getting Started
 
@@ -33,17 +35,17 @@ Before we dive into migrating you to KNP lets go over a few important details:
 
 ### Egress Rules
 
-With KNP pods will be able to connect to other pods within their namespace, in other namespaces, or to external systems (outside of the cluster). This is because egress rules are not available to tenants (project teams) just yet. They are available in OCP v4.6 but there isn't a migration path to them until OCP v4.8 which is expected in about June of 2021. 
+With KNP in place pods will be able to connect to other pods within their namespace, in other namespaces, or to external systems (outside of the cluster). This is because egress rules are not available to tenants (project teams) just yet. This type of policy is available in OCP v4.6 but there isn't a migration path to them until OCP v4.8 which is expected in June of this year (2021). 
 
-Without egress policy pods that need to communicate **between namespaces** only require ingress rules on the destination pod to permit the inbound communication. This is fine is most circumstances because you will have a deny-by-default rule guarding all your namespaces.
+Without egress policy pods that need to communicate **between namespaces** only require ingress rules on the destination pod to permit the inbound communication. This is fine is most circumstances because you will have a *deny-by-default* rule guarding all your namespaces.
 
-High security projects that require egress rules to isolated a namespace should reach out to Platform Services (PS); these policies can be implemented, as needed, by a cluster administrator.
+High security projects that require egress rules to isolated a namespace should reach out to Platform Services; these policies can be implemented, as needed, by a cluster administrator.
 
 ### Roll Out
 
-As platform tenants implement this guide they are "rolling out" KNP; there is nothing Platform Services needs to do. Everything is in place and working as expected. What will happen as per the dates below is a `cut-over` process were a *deny-by-default* policy will be installed in each namespace if it does not already exist. This policy can not be removed or altered. Any existing KNP or NSP will not be touched.
+As platform tenants implement network policy they are "rolling out" KNP; there is nothing Platform Services needs to do. Everything is in place and working as expected. What will happen as per the dates below is a `cut-over` process were a *deny-by-default* policy will be installed in each namespace, if it does not already exist. This policy can not be removed or altered. Any existing KNP or NSP will not be touched.
 
-Once the *deny-by-default* policy is in place it will mirror how OCP4 namespaces were delivered: locked down, no pods can talk within a namespace, no pods can talk across namespaces. Teams will need to build up KNP to permit pods to communicate as they see fit,with the exception of egress as per above.
+Once the *deny-by-default* policy is in place it will mirror how OCP4 namespaces were delivered: locked down, no pods can talk within a namespace, no pods can talk across namespaces. Teams will need to build up KNP to permit pods to communicate as they see fit, with the exception of egress as per above.
 
 If you already have NSP in place, and its working, you can continue to use it until Aporeto is removed. When this happens, all NSP will be disabled, then after a soak-in period it will be deleted and Aporeto will be un-installed from the platform.
 
@@ -62,15 +64,13 @@ Here is the schedule of events. All changes take places during business hours on
 
 # Implementation
 
-When KNP is added to a namespace that targets a pod, that's when the control traffic flow at the IP address or port level (OSI layer 3 or 4) takes effect. This is why **the cut-over dates above are important**: The deny-by-default policy automatically targets all pods within a namespace and effectively "turning on" KNP.
-
-As part of a teams roll out of KNP the first policy that should be implemented is deny-by-default. This will "turn on" traffic flow control. Also, with this rule in place teams won't be impacted by the cut-over activities.
+When KNP is added to a namespace that targets a pod, that's when the control traffic flow at the IP address or port level (OSI layer 3 or 4) takes effect. This is why **the cut-over dates above are important**: The *deny-by-default* policy automatically targets all pods within a namespace and effectively "turns on" KNP. With this rule in place teams won't be impacted by the cut-over activities.
 
 ## Quick Start
 
-There is an OCP template called [QuickStart](./quickstart.yaml) at the root level of this repo. It adds very permissive NSP effectively disabling it for the namespace its run against and enough KNP to lock down the namespace with the deny-by-default then opens up ingress (inbound communication) for any pod with a service / route combination as well as allowing pods within the namespace to communicate.
+There is an OCP template called [QuickStart](./quickstart.yaml) at the root level of this repo. It adds very permissive NSP effectively disabling it for the given namespace while simultaneously adding KNP to lock down the namespace (with the *deny-by-default* policy), then opening up ingress (inbound communication) for any pod with a service / route combination, and finally allowing all pods within the namespace to communicate.
 
-This will esentially migrate a namespace from NSP to KNP in such a way that the cut-ver activities (schedule above) will have no impact on a namespace.
+This will essentially migrate a namespace from NSP to KNP in such a way that the cut-ver activities (schedule above) will have no impact on a namespace.
 
 Before you run the quick start template, consider removing any excess NSP so that debugging is easier:
 
@@ -107,7 +107,7 @@ That's it. While you're technically done it is **highly** recommended teams writ
 **Pro Tip 🤓**
 
 - Use `oc get networkpolicy` or the OpenShift Web Console to view your newly minted policy;
-- You can use this command to run the policy against your current environment:
+- You can use this command to run the policy against your current namespace:
 
 ```console
 oc process -f quickstart.yaml \
@@ -118,23 +118,23 @@ oc process -f quickstart.yaml \
 
 ## Migrating Custom Network Policy
 
-Writing custom network policy to control traffic flow between pods is by far the better approach to securing a namespace. The the docs linked in the **TL;DR** section above detail how to write policy; This guide is intended to be a high level overivew to better understand and convert existing NPS.
+Writing custom network policy to control traffic flow between pods is by far the better approach to securing a namespace. The the docs linked in the **TL;DR** section above detail how to write policy; This guide is intended to be a high level overview to better understand and convert existing NPS to KNP.
 
 ### Side by Side Comparison
 
-The left panel of the image below shows existing NSP while the right shows it converted to KNP. Lets to through the differences in more details.
+The left panel of the image below shows existing NSP while the right shows it converted to KNP.
 
 ![Side by Side](images/side-by-side.png)
 
-Lets go through the differences in anatomy of a NSP and KNP to see how they translate:
+Lets go through the differences in anatomy of NSP and KNP to see how they translate:
 
 ![Side by Side 2](images/side-by-side-2.png)
 
-1) The **red** box shows the "header" of the YAML. It works just like any other OCP/k8s object definition. The main differences being the `kind` and `apiVersion` have change.
+1) The **red** box shows the "header" of the YAML. It works just like any other OCP/K8S object definition. The main differences being the `kind` and `apiVersion` have change.
 
-2) The **yellow** box illustrates the description. In NPS this was programmed into the Aporeto Web Control plane so one could better understand what the policy was meant to do. This isn't applicable in KNP, however, it's **highly recommended** one documents **why** the policy is needed; those who follow in your footsteps may not have the clear understanding of communication paths that you do.
+2) The **yellow** box illustrates the description. In NPS this was programmed into the Aporeto Web Control plane so one could better understand what the policy was meant to do. This isn't applicable in KNP, however, it's **highly recommended** you documents **why** the policy is needed; those who follow in your footsteps may not have the clear understanding of communication paths as you do.
 
-3) The **green** box illustrates the source component; this is where the communication originates. The NSP on the left uses label selectors to identify pods, this is the same with KNP. The only difference being KNP uses the `podSelector` notation.
+3) The **green** box illustrates the source component; this is where the communication originates. The NSP on the left uses label to identify pods as does the KNP on the right. The only difference being KNP uses the `podSelector` notation.
 
     In Aporeto NSP you would have added a `$namespace` label to specify where the pod was expected to live. In KNP the *deny-by-default* policy walls off your namespace; all policy builds on top of this and it is assumed pods live in the same namespace. If you are doing cross-namespace communication you'll need to add a `namespaceSelector` to the `from` section of the YAML.
 
@@ -174,7 +174,7 @@ These labels will be leveraged by your KNP to identify what pods KNP should be a
 
 ### Example
 
-Lets take a look at writing (converting) KNP for a simple example with the components listed below; each component below will have its own `DeploymentConfig`. For this example only four policies are needed: The first is the *deny-by-default* refereed to above. The second policy will be to allow network traffic to enter your namespace (ingress); the third policy will be to allow your API to talk to the database; and the fourth policy will be to allow the API to talk to minio.
+Lets take a look at writing (converting) KNP for a simple example with the components listed below; each component below will have its own `DeploymentConfig`. For this example only four policies are needed: The first is the *deny-by-default* refereed to above. The second policy will be to allow network traffic to enter your namespace (ingress); the third policy will be to allow the API to talk to the database; and the fourth policy will be to allow the API to talk to minio (S3 compatible object store).
 
 **Components**
 * web
@@ -187,10 +187,11 @@ Lets take a look at writing (converting) KNP for a simple example with the compo
 - Once you add a policy to a pod any traffic not specifically permitted is rejected. You can leverage this behavior to simplify your policies;
 - If you don't want a pod to accepted external network traffic (from the wild internet) then don't create a route to it. No additional policy is required.
 - `patroni` uses the label `role=master` to identify the primary replica in a `StatefulSet`, this examples uses the label `component` to identify pods to avoid confusion with this label.
+- Did you know CITZ offers an alternative solution to using minio, learn more about it [here](https://github.com/BCDevOps/OpenShift4-Migration/issues/59)
 
 **Walled Garden**
 
-First we'll isolate your namespace creating a walled garden. Nothing will be able to talk to the pods inside and the pods inside won't be able to talk to one another:
+First we'll isolate the namespace creating a walled garden. Nothing will be able to talk to the pods inside and the pods inside won't be able to talk to one another:
 
 ```yaml
 - kind: NetworkPolicy
@@ -233,7 +234,7 @@ Having a route alone isn't enough to let traffic flow into your pods, you also n
 
 **Pod to Pod**
 
-Once external communication is enabled we need two additional policies to allow traffic between pods. The fist policy is to allow the API to talk to the database and the second is to allow the API to talk to minio. 
+Once external communication is enabled we need two additional policies to allow traffic between pods. The fist policy below allows the API to talk to the database and the second allows the API to talk to minio. 
 
 These examples use the label convention `component: api` but alternative like `role: api` are perfectly fine; patroni uses `role: master` to denote the primary replica so for this example `component` is better suited
 
@@ -277,7 +278,7 @@ These examples use the label convention `component: api` but alternative like `r
 ```
 
 **Pro Tip 🤓**
-- The `port` is whatever port the pod exposes.
+- The `port` is whatever port the pod exposes. It has nothing to do with the `Service`.
 
 
 ## Testing
@@ -294,7 +295,7 @@ timeout 5 bash -c "</dev/tcp/api/8080"; echo $?
 | Item | Description |
 | :--- | :---------- |
 | A    | The protocol to use, `tcp` or `udp` |
-| B    | The `service` name as shown by `oc get service` |
+| B    | The `service` or pod name as shown by `oc get service` or `oc get pods` |
 | C    | The port number exposed by the Pod |
 | D    | The return code of the command: `0` means the pods can communicate, while `124` means the pods cannot communicate on the given protocol / port |
 | E    | The delay in seconds the command will wait before failing |

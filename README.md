@@ -21,7 +21,7 @@ While Aporeto provided a great developer experience and the functionality that m
 
 # Introduction
 
-This guide will walk you through the migration from Aporeto Network Security Policy (NSP) to OpenShift / Kubernets Network Policy.
+This guide will walk you through the migration from Aporeto Network Security Policy (NSP) to OpenShift / Kubernetes Network Policy.
 
 As you progress through the guide you will be able to leverage much of what you have done for NSP; for example, you can continue to use labels such as `role=web` or `component=api` that you may have created. 
 
@@ -118,7 +118,7 @@ oc process -f quickstart.yaml \
 
 ## Migrating Custom Network Policy
 
-Writing custom network policy to control traffic flow between pods is by far the better approach to securing a namespace. The the docs linked in the **TL;DR** section above detail how to write policy; This guide is intended to be a high level overview to better understand and convert existing NPS to KNP.
+Writing custom network policy to control traffic flow between pods is by far the better approach to securing a namespace. The the docs linked in the **TL;DR** section above detail how to write policy; This guide is intended to be a high level overview to better understand and convert existing NSP to KNP.
 
 ### Side by Side Comparison
 
@@ -130,7 +130,7 @@ Lets go through the differences in anatomy of NSP and KNP to see how they transl
 
 ![Side by Side 2](images/side-by-side-2.png)
 
-1) The **red** box shows the "header" of the YAML. It works just like any other OCP/K8S object definition. The main differences being the `kind` and `apiVersion` have change.
+1) The **red** box shows the "header" of the YAML. It works just like any other OCP/K8S object definition. The main differences being the `kind` and `apiVersion` have changed.
 
 2) The **yellow** box illustrates the description. In NPS this was programmed into the Aporeto Web Control plane so one could better understand what the policy was meant to do. This isn't applicable in KNP, however, it's **highly recommended** you documents **why** the policy is needed; those who follow in your footsteps may not have the clear understanding of communication paths as you do.
 
@@ -174,7 +174,7 @@ These labels will be leveraged by your KNP to identify what pods KNP should be a
 
 ### Example
 
-Lets take a look at writing (converting) KNP for a simple example with the components listed below; each component below will have its own `DeploymentConfig`. For this example only four policies are needed: The first is the *deny-by-default* refereed to above. The second policy will be to allow network traffic to enter your namespace (ingress); the third policy will be to allow the API to talk to the database; and the fourth policy will be to allow the API to talk to minio (S3 compatible object store).
+Lets take a look at writing (converting) KNP for a simple example with the components listed below; each component below will have its own `DeploymentConfig`. For this example only four policies are needed: The first is the *deny-by-default* referred to above. The second policy will be to allow network traffic to enter your namespace (ingress); the third policy will be to allow the API to talk to the database; and the fourth policy will be to allow the API to talk to minio (S3 compatible object store).
 
 **Components**
 * web

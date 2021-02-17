@@ -4,6 +4,8 @@ You're going to migrate from Aporeto Network Security Policy (NSP) to OpenShift'
 
 Here are some additional documents that thoroughly explain OCP's SDN implementation of KNP.
 
+* [We Made Video](https://youtu.be/qOoIbp9ZZY0)
+
 * [OpenShift SDN](https://docs.openshift.com/container-platform/4.5/networking/openshift_sdn/about-openshift-sdn.html)
 
 * [OpenShift NetworkPolicy](https://docs.openshift.com/container-platform/4.5/networking/network_policy/about-network-policy.html#about-network-policy)

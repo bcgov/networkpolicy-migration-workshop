@@ -1,3 +1,9 @@
+---
+description: Migrate from Aporeto Network Security Policy to Openshift's implementation of Kubernetes Network Policy
+resourceType: Documentation
+title: Networkpolicy Migration Workshop
+---
+
 # TL;DR
 
 You're going to migrate from Aporeto Network Security Policy (NSP) to OpenShift's implementation of Kubernetes Network Policy (KNP) by first adding NSP to your namespace(s) to open up network communication so all pods can talk to all other pods within a given namespace. Then, you'll create new KNP to ratchet down communications to a sane level.

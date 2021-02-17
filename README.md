@@ -1,5 +1,5 @@
 ---
-description: Migrate from Aporeto Network Security Policy to Openshifts' implementation of Kubernetes Network Policy
+description: Migrate from Aporeto Network Security Policy to Openshift's implementation of Kubernetes Network Policy
 resourceType: Documentation
 title: Networkpolicy Migration Workshop
 ---

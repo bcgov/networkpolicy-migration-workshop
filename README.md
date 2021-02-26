@@ -90,20 +90,18 @@ When you are ready to apply the quick start policy above run the following comma
 
 ```console
 oc process -f quickstart.yaml \
- -p NAMESPACE_PREFIX=<LICENS_PLATE_HERE> \
- -p ENVIRONMENT=<ENVIRONMENT_NAME_HERE> | \
+ -p NAMESPACE=<NAMESPACE_NAME_HERE> \
  oc apply -f -
 ```
 
-| Parameter        | Description         |
-| :--------------- | :------------------ |
-| NAMESPACE_PREFIX | The license plate portion of your namespace. ie a 96fec |
-| ENVIRONMENT      | The name of your environment. ie. dev |
+| Parameter    | Description         |
+| :----------- | :------------------ |
+| NAMESPACE    | The namespace you are deploying this policy to. |
 
 Here is what the command should look like when run:
 
 ```console
-➜  knp-migration-workshop git:(main) ✗ oc process -f quickstart.yaml NAMESPACE_PREFIX=${$(oc project --short)%%"-"*} -p ENVIRONMENT=${$(oc project --short)##*"-"} | oc apply -f -
+➜  knp-migration-workshop git:(main) ✗ oc process -f quickstart.yaml NAMESPACE -p $(oc project --short) | oc apply -f -
 networkpolicy.networking.k8s.io/deny-by-default created
 networkpolicy.networking.k8s.io/allow-all-internal created
 networksecuritypolicy.security.devops.gov.bc.ca/any-to-any created
@@ -115,14 +113,6 @@ That's it. While you're technically done it is **highly** recommended teams writ
 **Pro Tip 🤓**
 
 - Use `oc get networkpolicy` or the OpenShift Web Console to view your newly minted policy;
-- You can use this command to run the policy against your current namespace:
-
-```console
-oc process -f quickstart.yaml \
- -p NAMESPACE_PREFIX=${$(oc project --short)%%"-"*} \
- -p ENVIRONMENT=${$(oc project --short)##*"-"} | \
- oc apply -f -
-```
 
 ## Migrating Custom Network Policy
 

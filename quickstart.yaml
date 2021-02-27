@@ -44,6 +44,8 @@ objects:
       ingress:
       - from:
         - podSelector: {}
+        
+   # Please note that these are Aporeto CRD policies that are required in tandem with the k8s Network policies until Aporeto is shut off
   - apiVersion: security.devops.gov.bc.ca/v1alpha1
     kind: NetworkSecurityPolicy
     metadata:

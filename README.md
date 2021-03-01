@@ -104,7 +104,7 @@ When you are ready to apply the quick start policy above run the following comma
 ```console
 oc process -f quickstart.yaml \
  -p NAMESPACE=<NAMESPACE_NAME_HERE> \
- oc apply -f -
+ | oc apply -f -
 ```
 
 | Parameter    | Description         |

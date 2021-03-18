@@ -76,9 +76,9 @@ Here is the schedule of events. All changes take places during business hours on
 
 | Date      | What Happens? | Status  |
 | :-------- | :------------ | :-----: |
-| March 1   | All `tools` and `dev` namespaces are cut-over to KNP. | Completed |
-| March 8   | All `test` namespaces are cut-over to KNP. | |
-| March 15  | All `prod` namespaces are cut-over to KNP. | |
+| March 1   | All `dev` namespaces are cut-over to KNP. | Completed |
+| March 16  | All `tools` and `test` namespaces are cut-over to KNP. | Scheduled |
+| March 23  | All `prod` namespaces are cut-over to KNP. | |
 | March 29  | Aporeto will be disable but still be installed on the cluster. | |
 | April 5   | Aporeto will be un-installed from the cluster. | |
 

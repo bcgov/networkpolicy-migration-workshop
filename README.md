@@ -1,6 +1,6 @@
 [![Lifecycle:Retired](https://img.shields.io/badge/Lifecycle-Retired-d45500)](https://github.com/bcgov/openshift-workshop)
 
-This project is now archived because any "migration" work is not complete. Find updated QuickStart NetwrokPolicy [here](https://github.com/bcgov/openshift-workshop).
+This project is now archived because any "migration" work is complete. Find updated QuickStart NetwrokPolicy [here](https://github.com/bcgov/openshift-workshop).
 
 
 # TL;DR
